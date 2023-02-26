@@ -29,9 +29,62 @@
 #define LCD_ERR -1
 #define LCD_EXIT 11
 
+/**
+ * Configure GPIO character device.
+ *
+ * Open and configure a GPIO character device for use with
+ * the LCD driver. If LCD_CFG_GPIO_DEV is not set, fall back
+ * on LCD_DEFAULT_GPIO_DEV.
+ * @return A valid file descriptor on success, LCD_ERR on failure.
+ */
 int lcd_init(void);
+
+/**
+ * Write a raw character from the 8-bit LCD character set.
+ *
+ * @param fd An open file descriptor returned by lcd_init.
+ * @param chr Numeric value of the character to write. Must be within 1-byte range. 
+ * @return 0 on success, LCD_ERR on failure.
+ */
 int lcd_write_raw_char(int fd, int chr);
+
+/**
+ * Write a raw stream without handling any special characters.
+ *
+ * @param fd An open file descriptor returned by lcd_init.
+ * @param stream A stream of character data in the LCD's native encoding.
+ * @return 0 on success, LCD_ERR on failure.
+ */
 int lcd_write_raw_stream(int fd, FILE* stream);
+
+/**
+ * Write a stream of utf-8 data, handling some control codes and escapes.
+ *
+ * Certain codepoints supported by the LCD character set are translated into 
+ * the native encoding. Unsupported codepoints and encoding errors are replaced with '?'.
+ * Additionally, the following c0 codes and ANSI escapes are handled:
+ * '\x03', '\x04', '\\b', '\t', '\\n', '\r', "\e[C", "\e[D", "\e[2J", "\e[?25h", "\e[?25l", "\e[25m".   
+ *
+ * @param fd An open file descriptor returned by lcd_init.
+ * @param stream A stream of utf-8 encoded character data.
+ * @return 0 on success, LCD_ERR on failure.
+ */
 int lcd_write_utf8_stream(int fd, FILE* stream);
+
+/**
+ * Execute a command on the LCD device.
+ *
+ * @param fd An open file descriptor returned by lcd_init.
+ * @param cmd A bit pattern to be written into the the LCD's data bus.
+ * See the HD44780 data sheet for info about the different commands. 
+ * @return 0 on success, LCD_ERR on failure.
+ */
 int lcd_command(int fd, unsigned int cmd);
+
+/**
+ * Do some cleanup and close the GPIO fd. 
+ *
+ * @param fd An open file descriptor to be closed.
+ * @return 0 on success, non-zero on failure.
+ */
 int lcd_quit(int fd);
