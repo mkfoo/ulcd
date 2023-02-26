@@ -15,7 +15,7 @@ static int _r0(FILE* stream);
 static int _r1(FILE* stream);
 static int _r2(FILE* stream);
 static int _r3(FILE* stream);
-static int _skip(FILE* stream);
+static int _skip(int c, FILE* stream);
 
 static int _read_escape(FILE* stream) {
     if (fgetc(stream) == '[') {
@@ -26,7 +26,9 @@ static int _read_escape(FILE* stream) {
 }
 
 static int _r0(FILE* stream) {
-    switch (fgetc(stream)) {
+    int chr = fgetc(stream);
+
+    switch (chr) {
         case 'C':
             return ESC_CURSOR_FORWARD;
         case 'D':
@@ -39,55 +41,66 @@ static int _r0(FILE* stream) {
         case '?':
             return _r3(stream);
         default:
-            return _skip(stream);
+            return _skip(chr, stream);
     }
 }
 
 static int _r1(FILE* stream) {
-    switch (fgetc(stream)) {
+    int chr = fgetc(stream);
+
+    switch (chr) {
         case 'C':
             return ESC_CURSOR_FORWARD;
         case 'D':
             return ESC_CURSOR_BACKWARD;
         default:
-            return _skip(stream);
+            return _skip(chr, stream);
     }
 }
 
 static int _r2(FILE* stream) {
-    switch (fgetc(stream)) {
+    int chr = fgetc(stream);
+
+    switch (chr) {
         case 'J':
             return ESC_ERASE_DISPLAY;
         case '5':
-            if (fgetc(stream) == 'm') {
+            chr = fgetc(stream);
+            if (chr == 'm') {
                 return ESC_BLINK_OFF;
             }
         default:
-            return _skip(stream);
+            return _skip(chr, stream);
     }
 }
 
 static int _r3(FILE* stream) {
-    if (fgetc(stream) != '2') {
-        return _skip(stream);
+    int chr = fgetc(stream);
+
+    if (chr != '2') {
+        return _skip(chr, stream);
     }
 
-    if (fgetc(stream) != '5') {
-        return _skip(stream);
+    chr = fgetc(stream);
+
+    if (chr != '5') {
+        return _skip(chr, stream);
     }
 
-    switch (fgetc(stream)) {
+    chr = fgetc(stream);
+
+    switch (chr) {
         case 'h':
             return ESC_SHOW_CURSOR;
         case 'l':
             return ESC_HIDE_CURSOR;
         default:
-            return _skip(stream);
+            return _skip(chr, stream);
     }
 }
 
-static int _skip(FILE* stream) {
-    int chr = fgetc(stream);
+static int _skip(int c, FILE* stream) {
+    int chr = c;
 
     while (chr != EOF && chr > '\x1f' && chr < '@') {
         chr = fgetc(stream);
