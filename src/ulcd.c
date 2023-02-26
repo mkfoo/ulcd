@@ -1,5 +1,6 @@
 #include "ulcd.h"
 #include "charset.h"
+#include "escape.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/gpio.h>
@@ -93,6 +94,7 @@ static int _hw_init(int fd) {
     _sleep(LCD_SPACE);
     ret |= _write4(fd, 0x2);
     _sleep(LCD_SPACE * 20);
+    ret |= lcd_command(fd, LCD_CMD_ENTRY_MODE | LCD_FLAG_INCREMENT);
     ret |= lcd_command(fd, LCD_CMD_CLEAR);
     return ret;
 }
@@ -150,35 +152,25 @@ static int _handle_c0(int fd, FILE* stream, int cp) {
 }
 
 static int _handle_escape(int fd, FILE* stream) {
-    int chr = fgetc(stream);
-
-    if (chr != '[') {
-        return 0;
-    }
-
-    switch (chr) {
-        case '1':
-            chr = fgetc(stream);
-
-            if (chr == 'C') {
-                return lcd_command(
-                    fd, LCD_CMD_CURSOR_SHIFT | LCD_FLAG_MOVE_RIGHT);
-            }
-
-            if (chr == 'D') {
-                return lcd_command(fd, LCD_CMD_CURSOR_SHIFT);
-            }
-
-            return 0;
-        case '2':
-            chr = fgetc(stream);
-
-            if (chr == 'J') {
-                return lcd_command(fd, LCD_CMD_CLEAR);
-            }
-
-            return 0;
-        case '?':
+    switch (_read_escape(stream)) {
+        case ESC_CURSOR_FORWARD:
+            return lcd_command(fd, LCD_CMD_CURSOR_SHIFT | LCD_FLAG_MOVE_RIGHT);
+        case ESC_CURSOR_BACKWARD:
+            return lcd_command(fd, LCD_CMD_CURSOR_SHIFT);
+        case ESC_ERASE_DISPLAY:
+            return lcd_command(fd, LCD_CMD_CLEAR);
+        case ESC_SHOW_CURSOR:
+            return lcd_command(
+                fd, LCD_CMD_DISPLAY_CTL | LCD_FLAG_DISPLAY_ON |
+                        LCD_FLAG_CURSOR_ON | LCD_FLAG_BLINK_ON);
+        case ESC_HIDE_CURSOR:
+            return lcd_command(
+                fd, LCD_CMD_DISPLAY_CTL | LCD_FLAG_DISPLAY_ON |
+                        LCD_FLAG_CURSOR_OFF);
+        case ESC_BLINK_OFF:
+            return lcd_command(
+                fd, LCD_CMD_DISPLAY_CTL | LCD_FLAG_DISPLAY_ON |
+                        LCD_FLAG_CURSOR_ON | LCD_FLAG_BLINK_OFF);
         default:
             return 0;
     }

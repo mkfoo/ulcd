@@ -3,7 +3,7 @@ VPATH = src
 CFLAGS = -Werror -Wall -Wextra -Wpedantic -std=c17 -D_POSIX_C_SOURCE=199309L
 OFLAGS = -O1
 OBJECTS = main.o ulcd.o 
-HEADERS = ulcd.h charset.h
+HEADERS = ulcd.h charset.h escape.h
 
 $(PROGRAM) : $(OBJECTS) 
 	$(CC) $(CFLAGS) $(OFLAGS) $(OBJECTS) -o $(PROGRAM)
