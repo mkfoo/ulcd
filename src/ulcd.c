@@ -27,6 +27,7 @@ static int _write4(int fd, unsigned int val);
 static int _write8(int fd, unsigned int mode, unsigned int val);
 static int _hw_init(int fd);
 static unsigned int _get_pin_cfg(unsigned int lines, char* var_name);
+static int _backspace(int fd);
 static int _handle_c0(int fd, FILE* stream, int cp);
 static int _handle_escape(int fd, FILE* stream);
 
@@ -121,13 +122,20 @@ static unsigned int _get_pin_cfg(unsigned int lines, char* var) {
     return val;
 }
 
+static int _backspace(int fd) {
+    int ret = lcd_command(fd, LCD_CMD_CURSOR_SHIFT);
+    ret |= lcd_write_raw_char(fd, ' ');
+    ret |= lcd_command(fd, LCD_CMD_CURSOR_SHIFT);
+    return ret;
+}
+
 static int _handle_c0(int fd, FILE* stream, int cp) {
     switch (cp) {
         case '\x03':
         case '\x04':
             return LCD_EXIT;
         case '\b':
-            return lcd_command(fd, LCD_CMD_CURSOR_SHIFT);
+            return _backspace(fd);
         case '\t':
             return lcd_write_raw_char(fd, ' ');
         case '\n':
