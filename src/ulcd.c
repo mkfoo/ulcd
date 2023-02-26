@@ -26,9 +26,9 @@ static int _enable(int fd);
 static int _write4(int fd, unsigned int val);
 static int _write8(int fd, unsigned int mode, unsigned int val);
 static int _hw_init(int fd);
-static unsigned int _get_pin_cfg(unsigned int lines, char *var_name);
-static int _handle_c0(int fd, FILE *stream, int cp);
-static int _handle_escape(int fd, FILE *stream);
+static unsigned int _get_pin_cfg(unsigned int lines, char* var_name);
+static int _handle_c0(int fd, FILE* stream, int cp);
+static int _handle_escape(int fd, FILE* stream);
 
 static int _write_raw(int fd, unsigned int value, unsigned int mask) {
     struct gpio_v2_line_values data = {
@@ -96,8 +96,8 @@ static int _hw_init(int fd) {
     return ret;
 }
 
-static unsigned int _get_pin_cfg(unsigned int lines, char *var) {
-    char *str = getenv(var);
+static unsigned int _get_pin_cfg(unsigned int lines, char* var) {
+    char* str = getenv(var);
 
     if (str == NULL) {
         fprintf(stderr, "Config variable %s not set\n", var);
@@ -121,7 +121,7 @@ static unsigned int _get_pin_cfg(unsigned int lines, char *var) {
     return val;
 }
 
-static int _handle_c0(int fd, FILE *stream, int cp) {
+static int _handle_c0(int fd, FILE* stream, int cp) {
     switch (cp) {
         case '\x03':
         case '\x04':
@@ -141,7 +141,7 @@ static int _handle_c0(int fd, FILE *stream, int cp) {
     }
 }
 
-static int _handle_escape(int fd, FILE *stream) {
+static int _handle_escape(int fd, FILE* stream) {
     int chr = fgetc(stream);
 
     if (chr != '[') {
@@ -154,8 +154,7 @@ static int _handle_escape(int fd, FILE *stream) {
 
             if (chr == 'C') {
                 return lcd_command(
-                    fd, LCD_CMD_CURSOR_SHIFT | LCD_FLAG_MOVE_RIGHT
-                );
+                    fd, LCD_CMD_CURSOR_SHIFT | LCD_FLAG_MOVE_RIGHT);
             }
 
             if (chr == 'D') {
@@ -178,7 +177,7 @@ static int _handle_escape(int fd, FILE *stream) {
 }
 
 int lcd_init(void) {
-    char *dev_path = getenv("LCD_CFG_GPIO_DEV");
+    char* dev_path = getenv("LCD_CFG_GPIO_DEV");
 
     if (dev_path == NULL) {
         dev_path = LCD_DEFAULT_GPIO_DEV;
@@ -213,9 +212,10 @@ int lcd_init(void) {
         return LCD_ERR;
     }
 
-    printf("PIN: GPIO\n D4:   %d\n D5:   %d\n "
-           "D6:   %d\n D7:   %d\n RS:   %d\n  E:   %d\n",
-           d4, d5, d6, d7, rs, e);
+    printf(
+        "PIN: GPIO\n D4:   %d\n D5:   %d\n "
+        "D6:   %d\n D7:   %d\n RS:   %d\n  E:   %d\n",
+        d4, d5, d6, d7, rs, e);
 
     struct gpio_v2_line_request req = {
         .offsets = {d4, d5, d6, d7, rs, e},
@@ -254,7 +254,7 @@ int lcd_write_raw_char(int fd, int chr) {
     return _write8(fd, LCD_MODE_DATA, (unsigned int)chr);
 }
 
-int lcd_write_raw_stream(int fd, FILE *stream) {
+int lcd_write_raw_stream(int fd, FILE* stream) {
     if (stream == NULL) {
         return LCD_ERR;
     }
@@ -270,7 +270,7 @@ int lcd_write_raw_stream(int fd, FILE *stream) {
     return err;
 }
 
-int lcd_write_utf8_stream(int fd, FILE *stream) {
+int lcd_write_utf8_stream(int fd, FILE* stream) {
     if (stream == NULL) {
         return LCD_ERR;
     }

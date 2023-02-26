@@ -13,7 +13,7 @@ int main(void) {
         return EXIT_FAILURE;
     }
 
-    char *fifo_path = getenv("LCD_CFG_FIFO_PATH");
+    char* fifo_path = getenv("LCD_CFG_FIFO_PATH");
 
     if (fifo_path == NULL) {
         fifo_path = LCD_DEFAULT_FIFO_PATH;
@@ -27,7 +27,7 @@ int main(void) {
     int err = 0;
 
     while (!err) {
-        FILE *stream = fopen(fifo_path, "r");
+        FILE* stream = fopen(fifo_path, "r");
 
         if (stream == NULL) {
             fprintf(stderr, "Failed to open FIFO: %s\n", strerror(errno));

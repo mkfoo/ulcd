@@ -15,10 +15,10 @@ const int CHARSET[NCHARS] = {
 };
 
 static int _lookup_codepoint(int cp);
-static int _read_codepoint(FILE *stream);
-static int _read_b2(FILE *stream, int b1);
-static int _read_b3(FILE *stream, int b1, int b2);
-static int _read_b4(FILE *stream, int b1, int b2, int b3);
+static int _read_codepoint(FILE* stream);
+static int _read_b2(FILE* stream, int b1);
+static int _read_b3(FILE* stream, int b1, int b2);
+static int _read_b4(FILE* stream, int b1, int b2, int b3);
 
 static int _lookup_codepoint(int cp) {
     int offset = 256 - NCHARS;
@@ -32,7 +32,7 @@ static int _lookup_codepoint(int cp) {
     return RPCHAR;
 }
 
-static int _read_codepoint(FILE *stream) {
+static int _read_codepoint(FILE* stream) {
     int b1 = fgetc(stream);
 
     if (b1 == EOF) {
@@ -50,7 +50,7 @@ static int _read_codepoint(FILE *stream) {
     return RPCHAR;
 }
 
-static int _read_b2(FILE *stream, int b1) {
+static int _read_b2(FILE* stream, int b1) {
     int b2 = fgetc(stream);
 
     if (b2 == EOF) {
@@ -68,7 +68,7 @@ static int _read_b2(FILE *stream, int b1) {
     return _read_b3(stream, b1, b2);
 }
 
-static int _read_b3(FILE *stream, int b1, int b2) {
+static int _read_b3(FILE* stream, int b1, int b2) {
     int b3 = fgetc(stream);
 
     if (b3 == EOF) {
@@ -86,7 +86,7 @@ static int _read_b3(FILE *stream, int b1, int b2) {
     return _read_b4(stream, b1, b2, b3);
 }
 
-static int _read_b4(FILE *stream, int b1, int b2, int b3) {
+static int _read_b4(FILE* stream, int b1, int b2, int b3) {
     int b4 = fgetc(stream);
 
     if (b4 == EOF) {

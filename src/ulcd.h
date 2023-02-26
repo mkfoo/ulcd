@@ -32,7 +32,7 @@
 
 int lcd_init(void);
 int lcd_write_raw_char(int fd, int chr);
-int lcd_write_raw_stream(int fd, FILE *stream);
-int lcd_write_utf8_stream(int fd, FILE *stream);
+int lcd_write_raw_stream(int fd, FILE* stream);
+int lcd_write_utf8_stream(int fd, FILE* stream);
 int lcd_command(int fd, unsigned int cmd);
 int lcd_quit(int fd);
