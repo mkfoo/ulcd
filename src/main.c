@@ -25,9 +25,10 @@ int main(void) {
     }
 
     int err = 0;
+    FILE* stream;
 
     while (!err) {
-        FILE* stream = fopen(fifo_path, "r");
+        stream = fopen(fifo_path, "r");
 
         if (stream == NULL) {
             fprintf(stderr, "Failed to open FIFO: %s\n", strerror(errno));
@@ -42,9 +43,11 @@ int main(void) {
         fprintf(stderr, "Failed to remove FIFO: %s\n", strerror(errno));
     }
 
+    err |= lcd_quit(fd);
+
     if (err == LCD_EXIT) {
         return EXIT_SUCCESS;
     }
 
-    return err;
+    return EXIT_FAILURE;
 }

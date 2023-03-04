@@ -94,6 +94,9 @@ static int _hw_init(int fd) {
     _sleep(LCD_SPACE);
     ret |= _write4(fd, 0x2);
     _sleep(LCD_SPACE * 20);
+    ret |= lcd_command(
+        fd, LCD_CMD_DISPLAY_CTL | LCD_FLAG_DISPLAY_ON | LCD_FLAG_CURSOR_ON |
+                LCD_FLAG_BLINK_ON);
     ret |= lcd_command(fd, LCD_CMD_ENTRY_MODE | LCD_FLAG_INCREMENT);
     ret |= lcd_command(fd, LCD_CMD_CLEAR);
     return ret;
@@ -301,7 +304,9 @@ int lcd_command(int fd, unsigned int cmd) {
 }
 
 int lcd_quit(int fd) {
-    int ret = _write_raw(fd, 0x0, LCD_MASK_ALL);
+    int ret = lcd_command(fd, LCD_CMD_CLEAR);
+    ret |= lcd_command(fd, LCD_CMD_DISPLAY_CTL | LCD_FLAG_DISPLAY_OFF);
+    ret |= _write_raw(fd, 0x0, LCD_MASK_ALL);
     close(fd);
     return ret;
 }
