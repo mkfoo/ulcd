@@ -11,7 +11,8 @@
 #include <time.h>
 #include <unistd.h>
 
-#define LCD_MASK_ALL 0x3f
+#define LCD_MASK_ALL 0x7f
+#define LCD_MASK_BKL 0x40
 #define LCD_MASK_E 0x20
 #define LCD_MASK_RS 0x10
 #define LCD_MASK_DATA 0xf
@@ -31,6 +32,8 @@ static unsigned int _get_pin_cfg(unsigned int lines, char* var_name);
 static int _backspace(int fd);
 static int _handle_c0(int fd, FILE* stream, int cp);
 static int _handle_escape(int fd, FILE* stream);
+static int _standby(int fd);
+static int _wake_up(int fd);
 
 static int _write_raw(int fd, unsigned int value, unsigned int mask) {
     struct gpio_v2_line_values data = {
@@ -84,9 +87,7 @@ static int _write8(int fd, unsigned int mode, unsigned int val) {
 }
 
 static int _hw_init(int fd) {
-    int ret = _write_raw(fd, 0x0, LCD_MASK_ALL);
-    _sleep(LCD_SPACE);
-    ret |= _write4(fd, 0x3);
+    int ret = _write4(fd, 0x3);
     _sleep(LCD_SPACE * 45);
     ret |= _write4(fd, 0x3);
     _sleep(LCD_SPACE * 45);
@@ -94,9 +95,7 @@ static int _hw_init(int fd) {
     _sleep(LCD_SPACE);
     ret |= _write4(fd, 0x2);
     _sleep(LCD_SPACE * 20);
-    ret |= lcd_command(
-        fd, LCD_CMD_DISPLAY_CTL | LCD_FLAG_DISPLAY_ON | LCD_FLAG_CURSOR_ON |
-                LCD_FLAG_BLINK_ON);
+    ret |= _wake_up(fd);
     ret |= lcd_command(fd, LCD_CMD_ENTRY_MODE | LCD_FLAG_INCREMENT);
     ret |= lcd_command(fd, LCD_CMD_CLEAR);
     return ret;
@@ -137,8 +136,9 @@ static int _backspace(int fd) {
 static int _handle_c0(int fd, FILE* stream, int cp) {
     switch (cp) {
         case '\x03':
-        case '\x04':
             return LCD_EXIT;
+        case '\x04':
+            return _standby(fd);
         case '\b':
             return _backspace(fd);
         case '\t':
@@ -179,6 +179,21 @@ static int _handle_escape(int fd, FILE* stream) {
     }
 }
 
+static int _standby(int fd) {
+    int ret = lcd_command(fd, LCD_CMD_CLEAR);
+    ret |= lcd_command(fd, LCD_CMD_DISPLAY_CTL | LCD_FLAG_DISPLAY_OFF);
+    ret |= _write_raw(fd, 0x0, LCD_MASK_ALL);
+    return ret;
+}
+
+static int _wake_up(int fd) {
+    int ret = lcd_command(
+        fd, LCD_CMD_DISPLAY_CTL | LCD_FLAG_DISPLAY_ON | LCD_FLAG_CURSOR_OFF |
+                LCD_FLAG_BLINK_OFF);
+    ret |= _write_raw(fd, LCD_MASK_BKL, LCD_MASK_BKL);
+    return ret;
+}
+
 int lcd_init(void) {
     char* dev_path = getenv("LCD_CFG_GPIO_DEV");
 
@@ -210,25 +225,26 @@ int lcd_init(void) {
     unsigned int d7 = _get_pin_cfg(lines, "LCD_CFG_D7");
     unsigned int rs = _get_pin_cfg(lines, "LCD_CFG_RS");
     unsigned int e = _get_pin_cfg(lines, "LCD_CFG_E");
+    unsigned int bkl = _get_pin_cfg(lines, "LCD_CFG_BKL");
 
-    if (!(d4 && d5 && d6 && d7 && rs && e)) {
+    if (!(d4 && d5 && d6 && d7 && rs && e && bkl)) {
         return LCD_ERR;
     }
 
     printf(
         "PIN: GPIO\n D4:   %d\n D5:   %d\n "
-        "D6:   %d\n D7:   %d\n RS:   %d\n  E:   %d\n",
-        d4, d5, d6, d7, rs, e);
+        "D6:   %d\n D7:   %d\n RS:   %d\n  E:   %d\n BKL: %d\n",
+        d4, d5, d6, d7, rs, e, bkl);
 
     struct gpio_v2_line_request req = {
-        .offsets = {d4, d5, d6, d7, rs, e},
+        .offsets = {d4, d5, d6, d7, rs, e, bkl},
         .consumer = "uLCD",
         .config =
             (struct gpio_v2_line_config){
                 .flags = GPIO_V2_LINE_FLAG_OUTPUT,
                 .num_attrs = 0,
             },
-        .num_lines = 6,
+        .num_lines = 7,
     };
 
     ret = ioctl(fd, GPIO_V2_GET_LINE_IOCTL, &req);
@@ -263,7 +279,7 @@ int lcd_write_raw_stream(int fd, FILE* stream) {
     }
 
     int chr = fgetc(stream);
-    int err = 0;
+    int err = _wake_up(fd);
 
     while (chr != EOF && !err) {
         err = lcd_write_raw_char(fd, chr);
@@ -278,9 +294,9 @@ int lcd_write_utf8_stream(int fd, FILE* stream) {
         return LCD_ERR;
     }
 
-    int cp = _read_codepoint(stream);
     int chr = 0;
-    int err = 0;
+    int cp = _read_codepoint(stream);
+    int err = _wake_up(fd);
 
     while (cp != EOF && !err) {
         if (cp < 32) {
@@ -304,9 +320,7 @@ int lcd_command(int fd, unsigned int cmd) {
 }
 
 int lcd_quit(int fd) {
-    int ret = lcd_command(fd, LCD_CMD_CLEAR);
-    ret |= lcd_command(fd, LCD_CMD_DISPLAY_CTL | LCD_FLAG_DISPLAY_OFF);
-    ret |= _write_raw(fd, 0x0, LCD_MASK_ALL);
+    int ret = _standby(fd);
     close(fd);
     return ret;
 }
