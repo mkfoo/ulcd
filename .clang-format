@@ -2,4 +2,4 @@ BasedOnStyle: llvm
 IndentCaseLabels: true
 IndentWidth: 4
 PointerAlignment: Left
-AlignAfterOpenBracket: AlwaysBreak
+AlignAfterOpenBracket: BlockIndent

@@ -165,15 +165,18 @@ static int _handle_escape(int fd, FILE* stream) {
         case ESC_SHOW_CURSOR:
             return lcd_command(
                 fd, LCD_CMD_DISPLAY_CTL | LCD_FLAG_DISPLAY_ON |
-                        LCD_FLAG_CURSOR_ON | LCD_FLAG_BLINK_ON);
+                        LCD_FLAG_CURSOR_ON | LCD_FLAG_BLINK_ON
+            );
         case ESC_HIDE_CURSOR:
             return lcd_command(
-                fd, LCD_CMD_DISPLAY_CTL | LCD_FLAG_DISPLAY_ON |
-                        LCD_FLAG_CURSOR_OFF);
+                fd,
+                LCD_CMD_DISPLAY_CTL | LCD_FLAG_DISPLAY_ON | LCD_FLAG_CURSOR_OFF
+            );
         case ESC_BLINK_OFF:
             return lcd_command(
                 fd, LCD_CMD_DISPLAY_CTL | LCD_FLAG_DISPLAY_ON |
-                        LCD_FLAG_CURSOR_ON | LCD_FLAG_BLINK_OFF);
+                        LCD_FLAG_CURSOR_ON | LCD_FLAG_BLINK_OFF
+            );
         default:
             return 0;
     }
@@ -189,7 +192,8 @@ static int _standby(int fd) {
 static int _wake_up(int fd) {
     int ret = lcd_command(
         fd, LCD_CMD_DISPLAY_CTL | LCD_FLAG_DISPLAY_ON | LCD_FLAG_CURSOR_OFF |
-                LCD_FLAG_BLINK_OFF);
+                LCD_FLAG_BLINK_OFF
+    );
     ret |= _write_raw(fd, LCD_MASK_BKL, LCD_MASK_BKL);
     return ret;
 }
@@ -234,7 +238,8 @@ int lcd_init(void) {
     printf(
         "PIN: GPIO\n D4:   %d\n D5:   %d\n "
         "D6:   %d\n D7:   %d\n RS:   %d\n  E:   %d\n BKL: %d\n",
-        d4, d5, d6, d7, rs, e, bkl);
+        d4, d5, d6, d7, rs, e, bkl
+    );
 
     struct gpio_v2_line_request req = {
         .offsets = {d4, d5, d6, d7, rs, e, bkl},
