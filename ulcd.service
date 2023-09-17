@@ -1,0 +1,14 @@
+[Unit]
+Description=uLCD
+
+[Service]
+Type=simple
+User=root
+Group=ulcd
+Restart=always
+RuntimeDirectory=ulcd
+EnvironmentFile=/etc/ulcd/env
+ExecStart=/usr/bin/ulcd
+
+[Install]
+WantedBy=multi-user.target
