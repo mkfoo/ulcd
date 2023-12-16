@@ -19,7 +19,7 @@ int main(void) {
         fifo_path = LCD_DEFAULT_FIFO_PATH;
     }
 
-    if (mkfifo(fifo_path, 0755) == -1) {
+    if (mkfifo(fifo_path, 0775) == -1) {
         fprintf(stderr, "Failed to create FIFO: %s\n", strerror(errno));
         return EXIT_FAILURE;
     }
